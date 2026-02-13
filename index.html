@@ -1,0 +1,1073 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8"/>
+<title>Travel Alarm Pro</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+</head>
+
+<body>
+
+<div class="app-frame">
+
+  <!-- ===== HEADER BAR ===== -->
+
+
+  <!-- ===== PURPLE INFO CARD ===== -->
+  <div class="top-card">
+
+    <div class="top-header">
+
+  <div class="top-left">
+    <div class="app-title">
+  <div class="main-title">Wake Me Up</div>
+  <div class="tagline">Smart Location Alarms For Travelers</div>
+</div>
+
+  </div>
+
+  <div class="top-right">
+    <span id="distanceDisplay"></span>
+  </div>
+
+</div>
+
+
+    <div id="stopList" class="stop-list"></div>
+
+    <div class="search-row">
+      <input id="searchBox" placeholder="Search city">
+      <button id="searchBtn">Search</button>
+    </div>
+
+    <button id="addStopBtn">+ Add Stop</button>
+
+    <div class="radius-row">
+      <div>Radius (km)</div>
+      <input type="number" id="radiusInput" value="0.5" step="0.1">
+    </div>
+
+    <input type="range"
+           id="radiusSlider"
+           min="100"
+           max="20000"
+           step="100"
+           value="500">
+
+  </div>
+
+
+  <!-- ===== WHITE MAP CONTAINER ===== -->
+  <div class="map-shell">
+
+      <!-- MAP PREVIEW -->
+      <div class="map-card">
+        <div class="map-inner">
+          <div id="map"></div>
+        </div>
+      </div>
+
+      <!-- SLIDER INSIDE SAME CARD -->
+      <div class="slider-container">
+
+        <div class="alarm-slider" id="alarmSlider">
+          <div class="slider-track">
+            <span class="slider-text">
+              SLIDE TO ACTIVATE ALARM
+            </span>
+            <div class="slider-thumb" id="sliderThumb"></div>
+          </div>
+        </div>
+
+      </div>
+
+  </div>
+
+</div>
+
+
+
+
+<style> 
+    /* ================= GLOBAL ================= */
+*{box-sizing:border-box;}
+
+body{
+  margin:0;
+  font-family:'Segoe UI',sans-serif;
+  display:flex;
+  justify-content:center;
+  overflow:hidden;
+
+  background:
+    radial-gradient(circle at var(--x,50%) var(--y,0%),
+    #ffffff,#eef0ff 45%,#e5e7f3);
+}
+.app-title{
+  display:flex;
+  flex-direction:column;
+  line-height:1.2;
+}
+
+.main-title{
+  font-size:17px;
+  font-weight:700;
+  color:white;
+  letter-spacing:.2px;
+  text-shadow:0 2px 6px rgba(255,255,255,.35);
+}
+
+.tagline{
+  font-size:11px;
+  font-weight:500;
+  opacity:.85;
+  color:white;
+}
+.app-title{
+  margin-top:-2px;
+}
+
+/* ================= APP FRAME ================= */
+.app-frame{
+  width:100%;
+  max-width:420px;
+  height:100vh;
+  padding:10px;
+  position:relative;
+  overflow:hidden;
+
+  filter:drop-shadow(0 25px 55px rgba(0,0,0,.18));
+}
+
+/* ================= PURPLE CARD ================= */
+.top-card{
+  margin-top:8px;
+  background:linear-gradient(135deg,#766eff,#5c40db);
+  border-radius:28px;
+  padding:16px;
+  color:white;
+
+  box-shadow:
+    0 20px 40px rgba(92,64,219,.45),
+    inset 0 2px 4px rgba(255,255,255,.35);
+
+  animation:cardFloat 4s ease-in-out infinite;
+}
+
+@keyframes cardFloat{
+  0%,100%{transform:translateY(0);}
+  50%{transform:translateY(-2px);}
+}
+
+/* ===== TOP HEADER ===== */
+.top-header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:12px;
+}
+
+.white-dot{
+  width:12px;
+  height:12px;
+  border-radius:50%;
+  background:white;
+  box-shadow:0 0 12px rgba(255,255,255,.9);
+}
+
+.top-right{
+  font-size:13px;
+  font-weight:700;
+  color:white;
+  text-shadow:0 2px 6px rgba(255,255,255,.4);
+}
+
+/* ================= INPUTS ================= */
+.search-row{
+  display:flex;
+  gap:8px;
+  margin-top:10px;
+}
+
+.search-row input,
+.radius-row input{
+  flex:1;
+  border:none;
+  border-radius:14px;
+  padding:12px;
+  outline:none;
+  background:rgba(255,255,255,.97);
+
+  box-shadow:
+    inset 0 2px 5px rgba(0,0,0,.08),
+    0 5px 12px rgba(0,0,0,.12);
+
+  transition:.25s;
+}
+
+.search-row input:focus,
+.radius-row input:focus{
+  transform:translateY(-2px) scale(1.02);
+  box-shadow:
+    0 0 0 3px rgba(255,255,255,.35),
+    0 12px 25px rgba(0,0,0,.25);
+}
+
+/* ================= BUTTONS ================= */
+button{
+  width:100%;
+  margin-top:8px;
+  border:none;
+  border-radius:14px;
+  padding:10px;
+  font-weight:700;
+  color:#6f6ce8;
+  background:white;
+  cursor:pointer;
+
+  transition:.2s;
+}
+
+button:active{
+  transform:scale(.95);
+}
+
+/* ================= RADIUS ================= */
+.radius-row{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  margin-top:12px;
+}
+
+.radius-row input{
+  width:90px;
+}
+
+input[type=range]{
+  width:100%;
+  margin-top:8px;
+}
+
+/* ================= MAP SHELL ================= */
+.map-shell{
+  margin-top:12px;
+  background:white;
+  border-radius:30px;
+  padding:10px;
+  height:calc(100vh - 285px);
+
+  display:flex;
+  flex-direction:column;
+
+  box-shadow:
+    0 25px 55px rgba(0,0,0,.18),
+    inset 0 1px 3px rgba(255,255,255,.9);
+
+  animation:mapFloat 5s ease-in-out infinite;
+}
+
+@keyframes mapFloat{
+  0%,100%{transform:translateY(0);}
+  50%{transform:translateY(-3px);}
+}
+
+/* ================= MAP ================= */
+.map-card{
+  flex:1;
+  background:#ececf3;
+  border-radius:22px;
+  padding:8px;
+}
+
+.map-inner{
+  width:100%;
+  height:100%;
+  border-radius:18px;
+  overflow:hidden;
+
+  box-shadow:
+    0 15px 35px rgba(0,0,0,.25),
+    0 0 20px rgba(111,108,232,.35);
+}
+
+#map{
+  width:100%;
+  height:100%;
+}
+
+/* ================= SLIDER ================= */
+.slider-container{
+  margin-top:10px;
+  background:#ececf3;
+  border-radius:30px;
+  height:60px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+.alarm-slider{
+  width:100%;
+  padding:0 5px;
+}
+
+.slider-track{
+  position:relative;
+  height:50px;
+  border-radius:25px;
+  background:linear-gradient(135deg,#766eff,#5c40db);
+
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  overflow:hidden;
+
+  box-shadow:
+    inset 0 2px 4px rgba(255,255,255,.3),
+    0 10px 25px rgba(92,64,219,.55);
+}
+
+/* ===== LIVE GRADIENT SHINE ===== */
+.slider-track::before{
+  content:"";
+  position:absolute;
+  top:0;
+  left:-100%;
+  width:100%;
+  height:100%;
+  background:linear-gradient(
+    90deg,
+    transparent,
+    rgba(255,255,255,.25),
+    transparent
+  );
+  animation:shine 3s linear infinite;
+}
+
+@keyframes shine{
+  to{left:100%;}
+}
+
+/* ===== ALARM ON PULSE ===== */
+.slider-track.active{
+  animation:pulse 1.5s infinite;
+}
+
+@keyframes pulse{
+  0%,100%{box-shadow:0 0 0 rgba(111,108,232,.6);}
+  50%{box-shadow:0 0 25px rgba(111,108,232,.85);}
+}
+
+/* ===== TEXT ===== */
+.slider-text{
+  color:white;
+  font-weight:700;
+  font-size:14px;
+  text-shadow:0 2px 6px rgba(0,0,0,.2);
+  user-select:none;
+}
+
+/* ===== THUMB ===== */
+.slider-thumb{
+  position:absolute;
+  left:0;
+  top:50%;
+  transform:translateY(-50%);
+  width:48px;
+  height:48px;
+  border-radius:50%;
+  background:white;
+
+  box-shadow:
+    0 8px 18px rgba(0,0,0,.3),
+    0 0 12px rgba(255,255,255,.85);
+
+  cursor:pointer;
+  transition:left .25s ease,transform .15s;
+}
+
+/* HAPTIC BOUNCE */
+.slider-thumb:active{
+  transform:translateY(-50%) scale(1.15);
+}
+
+/* ================= TOAST ================= */
+.toast{
+  position:absolute;
+  left:50%;
+  bottom:95px;
+  transform:translateX(-50%) translateY(20px);
+
+  background:linear-gradient(135deg,#766eff,#5c40db);
+  color:white;
+  padding:12px 20px;
+  border-radius:24px;
+  font-size:13px;
+
+  box-shadow:0 12px 25px rgba(0,0,0,.25);
+
+  opacity:0;
+  transition:.3s;
+  z-index:9999;
+}
+
+.toast.show{
+  opacity:1;
+  transform:translateX(-50%) translateY(0);
+}
+
+
+/* ================= PREMIUM RADIUS SLIDER ================= */
+
+input[type=range]{
+  -webkit-appearance:none;
+  width:100%;
+  height:8px;
+  border-radius:20px;
+  outline:none;
+
+  background:linear-gradient(
+    90deg,
+    #766eff 0%,
+    #6f6ce8 50%,
+    #5c40db 100%
+  );
+
+  box-shadow:
+    inset 0 2px 4px rgba(0,0,0,.2),
+    0 4px 10px rgba(111,108,232,.4);
+
+  transition:.25s;
+}
+
+/* ===== SLIDER HOVER GLOW ===== */
+input[type=range]:hover{
+  box-shadow:
+    inset 0 2px 4px rgba(0,0,0,.25),
+    0 0 15px rgba(111,108,232,.65);
+}
+
+/* ===== WEBKIT THUMB (Chrome/Edge) ===== */
+input[type=range]::-webkit-slider-thumb{
+  -webkit-appearance:none;
+  width:22px;
+  height:22px;
+  border-radius:50%;
+  background:white;
+  cursor:pointer;
+
+  box-shadow:
+    0 4px 12px rgba(0,0,0,.3),
+    0 0 10px rgba(255,255,255,.9);
+
+  transition:.15s;
+}
+
+/* HAPTIC EFFECT */
+input[type=range]::-webkit-slider-thumb:active{
+  transform:scale(1.2);
+}
+
+/* ===== FIREFOX ===== */
+input[type=range]::-moz-range-thumb{
+  width:22px;
+  height:22px;
+  border:none;
+  border-radius:50%;
+  background:white;
+  cursor:pointer;
+  box-shadow:
+    0 4px 12px rgba(0,0,0,.3),
+    0 0 10px rgba(255,255,255,.9);
+}
+
+</style>
+
+
+
+
+
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+<script>
+let routeAbortController = null;
+let alarmArmed = false;
+
+// ================= INIT MAP =================
+let map = L.map('map').setView([20,77],5);
+
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
+  attribution:'© OpenStreetMap'
+}).addTo(map);
+
+let userLatLng;
+let userMarker;
+let accuracyCircle;
+let routeLine;
+
+let finalDestination = null;
+let finalMarker = null;
+let finalCircle = null;
+
+let stops = [];
+let addingStop = false;
+let currentRadius = 500;
+
+
+// ================= LIVE LOCATION =================
+navigator.geolocation.watchPosition(
+
+  function(pos){
+
+    userLatLng = L.latLng(
+      pos.coords.latitude,
+      pos.coords.longitude
+    );
+
+    if(!userMarker){
+
+      userMarker = L.circleMarker(userLatLng,{
+        radius:8,
+        color:"#6f6ce8",
+        fillOpacity:1
+      }).addTo(map);
+
+      accuracyCircle = L.circle(userLatLng,{
+        radius:pos.coords.accuracy,
+        fillOpacity:.15,
+        color:"#6f6ce8"
+      }).addTo(map);
+
+      map.setView(userLatLng,15);
+
+    } else {
+
+      userMarker.setLatLng(userLatLng);
+      accuracyCircle.setLatLng(userLatLng);
+      accuracyCircle.setRadius(pos.coords.accuracy);
+
+    }
+
+    checkGeofence();
+  },
+
+  function(error){
+    console.log("GPS Error:", error);
+    alert("Please allow location access");
+  },
+
+  {
+    enableHighAccuracy:true
+  }
+
+);
+
+
+
+// ================= RADIUS =================
+const slider = document.getElementById("radiusSlider");
+const radiusInput = document.getElementById("radiusInput");
+function searchCity(){
+
+  const city = document.getElementById("searchBox").value.trim();
+  if(!city) return;
+
+fetch(`https://nominatim.openstreetmap.org/search?format=jsonv2&q=${encodeURIComponent(city)}&limit=1`)
+  .then(res=>res.json())
+  .then(data=>{
+
+    if(!data.length){
+      alert("City not found");
+      return;
+    }
+
+    const latlng = L.latLng(
+      parseFloat(data[0].lat),
+      parseFloat(data[0].lon)
+    );
+
+    setFinalDestination(latlng);
+    drawRoute();
+
+  })
+  .catch(()=>alert("Search failed"));
+
+}
+
+
+slider.addEventListener("input", function(){
+
+  currentRadius = parseInt(this.value);
+  radiusInput.value = (currentRadius / 1000).toFixed(1);
+
+  updateAllCircles();
+
+});
+
+radiusInput.addEventListener("input", function(){
+
+  let km = parseFloat(this.value);
+  if(isNaN(km) || km <= 0) return;
+
+  currentRadius = km * 1000;
+  slider.value = currentRadius;
+
+  updateAllCircles();
+
+});
+
+function updateAllCircles(){
+
+  // update final destination circle
+  if(finalCircle){
+    finalCircle.setRadius(currentRadius);
+  }
+
+  // update all stop circles
+  stops.forEach(stop=>{
+    stop.radius = currentRadius;
+    stop.circle.setRadius(currentRadius);
+  });
+
+}
+
+
+
+// ================= SEARCH =================
+document.getElementById("searchBox")
+.addEventListener("keydown", function(e){
+
+  if(e.key !== "Enter") return;
+
+  const city = this.value.trim();
+  if(!city) return;
+
+  fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(city)}&limit=1`)
+    .then(res => res.json())
+    .then(data => {
+
+      if(!data.length){
+        alert("City not found");
+        return;
+      }
+
+      const latlng = L.latLng(
+        parseFloat(data[0].lat),
+        parseFloat(data[0].lon)
+      );
+
+      setFinalDestination(latlng);
+      drawRoute();   // IMPORTANT
+
+    })
+    .catch(err=>{
+      console.log("Search error:", err);
+      alert("Search failed. Try again.");
+    });
+
+});
+
+document.getElementById("searchBtn").onclick = searchCity;
+
+document.getElementById("searchBox")
+.addEventListener("keydown",e=>{
+  if(e.key==="Enter") searchCity();
+});
+
+// ================= ADD STOP MODE =================
+document.getElementById("addStopBtn").onclick=function(){
+  addingStop=true;
+showToast("Click on map to add stop");
+};
+
+
+// ================= MAP CLICK =================
+map.on("click",function(e){
+
+  if(!userLatLng){
+    alert("Waiting for GPS...");
+    return;
+  }
+
+  if(addingStop){
+    addStop(e.latlng);
+    addingStop=false;
+  } else {
+    setFinalDestination(e.latlng);
+  }
+
+
+});
+
+
+// ================= FINAL DESTINATION =================
+function setFinalDestination(latlng){
+
+  if(finalMarker) map.removeLayer(finalMarker);
+  if(finalCircle) map.removeLayer(finalCircle);
+
+  finalDestination=latlng;
+
+  finalMarker=L.marker(latlng).addTo(map);
+
+  finalCircle=L.circle(latlng,{
+    radius:currentRadius,
+    color:"red",
+    fillOpacity:.2
+  }).addTo(map);
+drawRoute();
+resetAlarmSlider();
+}
+
+
+// ================= ADD STOP =================
+async function addStop(latlng){
+
+  let marker=L.marker(latlng,{icon:L.icon({
+    iconUrl:"https://maps.google.com/mapfiles/ms/icons/blue-dot.png",
+    iconSize:[32,32]
+  })}).addTo(map);
+
+  let circle=L.circle(latlng,{
+    radius:currentRadius,
+    color:"orange",
+    fillOpacity:.2
+  }).addTo(map);
+
+  const cityName = await getCityName(latlng.lat,latlng.lng);
+
+  const stopObj={
+    latlng,
+    marker,
+    circle,
+    radius:currentRadius,
+    reached:false,
+    name:cityName
+  };
+
+  stops.push(stopObj);
+
+  renderStops();
+  drawRoute();
+  resetAlarmSlider();
+}
+function renderStops(){
+
+  const container=document.getElementById("stopList");
+  container.innerHTML="";
+
+  stops.forEach((stop,index)=>{
+
+    const chip=document.createElement("div");
+    chip.className="stop-chip";
+    chip.innerHTML=`${stop.name} <span data-id="${index}">✕</span>`;
+
+    container.appendChild(chip);
+
+  });
+
+}
+document.getElementById("stopList")
+.addEventListener("click",e=>{
+
+  if(e.target.tagName==="SPAN"){
+
+    const i=e.target.dataset.id;
+    const stop=stops[i];
+
+    map.removeLayer(stop.marker);
+    map.removeLayer(stop.circle);
+
+    stops.splice(i,1);
+
+    renderStops();
+    drawRoute();
+    resetAlarmSlider();
+
+  }
+
+});
+
+
+// ================= DRAW ROUTE =================
+function drawRoute(){
+
+  if(!userLatLng || !finalDestination) return;
+
+  // cancel previous request
+  if(routeAbortController){
+    routeAbortController.abort();
+  }
+
+  routeAbortController = new AbortController();
+
+  // remove previous route
+  if(routeLine){
+    map.removeLayer(routeLine);
+    routeLine = null;
+  }
+
+  let coords=`${userLatLng.lng},${userLatLng.lat}`;
+
+  stops.forEach(s=>{
+    coords+=`;${s.latlng.lng},${s.latlng.lat}`;
+  });
+
+  coords+=`;${finalDestination.lng},${finalDestination.lat}`;
+
+  fetch(
+    `https://router.project-osrm.org/route/v1/driving/${coords}?overview=full&geometries=geojson`,
+    { signal: routeAbortController.signal }
+  )
+  .then(res=>res.json())
+  .then(data=>{
+
+  if(!data.routes || !data.routes.length) return;
+
+  routeLine = L.geoJSON(data.routes[0].geometry,{
+    style:{color:"#6f6ce8",weight:5}
+  }).addTo(map);
+
+  map.fitBounds(routeLine.getBounds());
+
+  updateDistance();   // ✅ CORRECT PLACE
+
+})
+}
+
+function resetAlarmSlider(){
+
+  // turn alarm off
+  if(alarmArmed){
+    deactivateAlarm();  // ← THIS IS THE KEY
+  }
+  // stop sound if playing
+  const audio = document.getElementById("alarmSound");
+  audio.pause();
+  audio.currentTime = 0;
+
+  // move slider back
+  const thumb = document.getElementById("sliderThumb");
+  if(thumb){
+    thumb.style.left = "0px";
+  }
+
+  // reset text
+  const txt = document.querySelector(".slider-text");
+  if(txt){
+    txt.textContent = "SLIDE TO ACTIVATE ALARM";
+  }
+
+  
+}
+
+
+// ================= GEOFENCE =================
+function checkGeofence(){
+
+  if(!userLatLng || !alarmArmed) return;
+
+  stops.forEach(stop=>{
+
+    if(!stop.reached){
+
+      const distance = userLatLng.distanceTo(stop.latlng);
+
+      if(distance <= stop.radius){
+
+        stop.reached = true;
+
+        stop.circle.setStyle({color:"green"});
+
+        triggerAlarmSound(stop.name);
+
+      }
+
+    }
+
+  });
+
+}
+function triggerAlarmSound(place){
+
+  const audio = document.getElementById("alarmSound");
+
+  audio.currentTime = 0;
+  audio.play().catch(()=>{});
+
+
+  showToast("Reached: " + place);
+
+}
+
+
+
+function showToast(message){
+
+  const toast = document.getElementById("toast");
+
+  toast.textContent = message;
+  toast.classList.add("show");
+
+  setTimeout(()=>{
+    toast.classList.remove("show");
+  },2000);
+
+}
+
+
+
+
+
+
+
+async function getCityName(lat,lng){
+
+  try{
+    const res = await fetch(
+      `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`
+    );
+
+    const data = await res.json();
+
+    return (
+      data.address.city ||
+      data.address.town ||
+      data.address.village ||
+      "Stop"
+    );
+
+  }catch{
+    return "Stop";
+  }
+
+}
+function updateDistance(){
+
+  if(!routeLine) return;
+
+  const layer = routeLine.getLayers()[0];
+  if(!layer) return;
+
+  const coords = layer.getLatLngs();
+
+  let total = 0;
+
+  for(let i=1;i<coords.length;i++){
+    total += coords[i].distanceTo(coords[i-1]);
+  }
+
+  document.getElementById("distanceDisplay").textContent =
+    "Distance: " + (total/1000).toFixed(2) + " km";
+}
+
+
+
+
+window.addEventListener("DOMContentLoaded", () => {
+
+  const thumb = document.getElementById("sliderThumb");
+  const slider = document.querySelector(".slider-track");
+
+  let dragging = false;
+  let startX = 0;
+  let currentX = 0;
+
+  slider.addEventListener("mousedown",startDrag);
+  document.addEventListener("mousemove",drag);
+  document.addEventListener("mouseup",stopDrag);
+
+  slider.addEventListener("touchstart",startDrag);
+  document.addEventListener("touchmove",drag);
+  document.addEventListener("touchend",stopDrag);
+
+  function startDrag(e){
+    dragging=true;
+    startX = getX(e);
+  }
+
+  function drag(e){
+  if(!dragging) return;
+
+  const sliderRect = slider.getBoundingClientRect();
+  const thumbRect = thumb.getBoundingClientRect();
+
+  currentX = getX(e) - sliderRect.left - (thumbRect.width / 2);
+
+  const max = slider.offsetWidth - thumb.offsetWidth;
+
+  if(currentX < 0) currentX = 0;
+  if(currentX > max) currentX = max;
+
+  thumb.style.left = currentX + "px";
+}
+
+
+  function stopDrag(){
+
+  if(!dragging) return;
+  dragging=false;
+
+  const max = slider.offsetWidth - thumb.offsetWidth;
+
+  if(currentX >= max * 0.95){
+
+    thumb.style.left = max + "px";
+
+    if(!alarmArmed){
+      activateAlarm();
+    }
+
+  } else {
+
+    thumb.style.left = "0px";
+
+    if(alarmArmed){
+      deactivateAlarm();
+    }
+
+  }
+}
+
+
+
+  function getX(e){
+    return e.touches ? e.touches[0].clientX : e.clientX;
+  }
+
+  function activateAlarm(){
+
+  alarmArmed = true;
+
+  showToast("Alarm Activated");
+  console.log("Alarm ON");
+
+  checkGeofence(); // ← IMPORTANT
+
+}
+
+});
+
+function deactivateAlarm(){
+
+  alarmArmed = false;
+
+  const audio = document.getElementById("alarmSound");
+  audio.pause();
+  audio.currentTime = 0;
+
+  showToast("Alarm Off");
+  console.log("Alarm OFF");
+
+}
+
+</script>
+<audio id="alarmSound" src="ALARM.mp3" preload="auto"></audio>
+
+
+<div id="toast" class="toast"></div>
+
+</body>
+</html>
