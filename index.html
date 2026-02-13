@@ -565,8 +565,11 @@ navigator.geolocation.watchPosition(
   },
 
   {
-    enableHighAccuracy:true
-  }
+  enableHighAccuracy:true,
+  maximumAge:0,
+  timeout:5000
+}
+
 
 );
 
@@ -875,6 +878,7 @@ function checkGeofence(){
 
   if(!userLatLng || !alarmArmed) return;
 
+  /* ===== CHECK STOPS ===== */
   stops.forEach(stop=>{
 
     if(!stop.reached){
@@ -884,18 +888,30 @@ function checkGeofence(){
       if(distance <= stop.radius){
 
         stop.reached = true;
-
         stop.circle.setStyle({color:"green"});
 
         triggerAlarmSound(stop.name);
-
       }
-
     }
 
   });
 
+  /* ===== CHECK FINAL DESTINATION (IMPORTANT) ===== */
+  if(finalDestination){
+
+    const finalDistance =
+      userLatLng.distanceTo(finalDestination);
+
+    if(finalDistance <= currentRadius){
+
+      triggerAlarmSound("Destination");
+
+      // prevent repeated ringing
+      finalDestination = null;
+    }
+  }
 }
+
 function triggerAlarmSound(place){
 
   const audio = document.getElementById("alarmSound");
@@ -1047,12 +1063,22 @@ window.addEventListener("DOMContentLoaded", () => {
 
   alarmArmed = true;
 
+  // 🔥 RESET ALL STOPS WHEN ARMING ALARM
+  stops.forEach(s => s.reached = false);
+
+  // 🔥 UNLOCK AUDIO FOR MOBILE
+  const audio = document.getElementById("alarmSound");
+  audio.play().then(()=>{
+    audio.pause();
+    audio.currentTime = 0;
+  }).catch(()=>{});
+
   showToast("Alarm Activated");
   console.log("Alarm ON");
 
-  checkGeofence(); // ← IMPORTANT
-
+  checkGeofence();
 }
+
 
 });
 
