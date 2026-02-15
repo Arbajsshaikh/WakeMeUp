@@ -5,9 +5,6 @@
 <title>Travel Alarm Pro</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
-<meta name="viewport"
-content="width=device-width, initial-scale=1, viewport-fit=cover">
-
 </head>
 
 <body>
@@ -24,9 +21,19 @@ content="width=device-width, initial-scale=1, viewport-fit=cover">
 
   <div class="top-left">
     <div class="app-title">
-  <div class="main-title">Wake Me Up</div>
+
+  <div class="title-row">
+      <div class="main-title">Wake Me Up</div>
+
+      <div id="infoBtn" class="info-btn">i</div>
+        <div id="refreshBtn" class="info-btn">R</div>
+
+  </div>
+
   <div class="tagline">Smart Location Alarms For Travelers</div>
+
 </div>
+
 
   </div>
 
@@ -93,6 +100,213 @@ content="width=device-width, initial-scale=1, viewport-fit=cover">
 
 
 <style> 
+
+
+
+#refreshBtn{
+  background:#ffffff;
+  color:#6a52ff;
+  size:15px;
+}
+
+
+/* ===== APPLE STYLE REFRESH EFFECT ===== */
+#refreshOverlay{
+  position:fixed;
+  top:50%;
+  left:50%;
+  width:20px;
+  height:20px;
+  border-radius:50%;
+  background:radial-gradient(circle,
+    rgba(149, 255, 110, 0.6),
+    rgba(118,110,255,0.2),
+    transparent);
+
+  transform:translate(-50%,-50%) scale(0);
+  pointer-events:none;
+  z-index:99999;
+  opacity:0;
+}
+
+#refreshOverlay.active{
+  animation:pairPulse 0.9s ease forwards;
+}
+
+@keyframes pairPulse{
+  0%{
+    transform:translate(-50%,-50%) scale(0);
+    opacity:1;
+  }
+
+  70%{
+    transform:translate(-50%,-50%) scale(25);
+    opacity:0.8;
+  }
+
+  100%{
+    transform:translate(-50%,-50%) scale(40);
+    opacity:0;
+  }
+}
+
+.pulse-marker{
+  width:18px;
+  height:18px;
+  border-radius:50%;
+  background:#00ff88;
+  box-shadow:0 0 0 rgba(0,255,120,0.6);
+  animation:pulseAnim 1.5s infinite;
+}
+
+@keyframes pulseAnim{
+  0%{box-shadow:0 0 0 0 rgba(0,255,120,.6);}
+  70%{box-shadow:0 0 0 18px rgba(0,255,120,0);}
+  100%{box-shadow:0 0 0 0 rgba(0,255,120,0);}
+}
+
+/* TITLE ROW */
+.title-row{
+    display:flex;
+    align-items:center;
+    gap:8px;
+}
+
+/* INFO ICON */
+.info-btn{
+    width:18px;
+    height:18px;
+    margin-left:10px;
+    border-radius:50%;
+    background:white;
+    color:#6a52ff;
+    font-weight:bold;
+    font-size:19px;
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    cursor:pointer;
+
+    box-shadow:0 3px 8px rgba(0,0,0,.2);
+
+    /* INFINITE PREMIUM POP */
+    animation:popPulse 1.2s ease-in-out infinite;
+}
+
+/* ===== PREMIUM POP IN-OUT ===== */
+@keyframes popPulse{
+
+    0%{
+        transform:scale(1);
+        box-shadow:0 3px 8px rgba(0,0,0,.2);
+        opacity:1;
+    }
+
+    50%{
+        transform:scale(1.25);
+        box-shadow:0 0 14px rgba(106,82,255,.6);
+        opacity:0.85;
+    }
+
+    100%{
+        transform:scale(1);
+        box-shadow:0 3px 8px rgba(0,0,0,.2);
+        opacity:1;
+    }
+}
+
+
+/* OVERLAY */
+.guide-modal{
+    position:fixed;
+    top:0;
+    left:0;
+    width:100%;
+    height:100%;
+    display:none;
+    align-items:center;
+    justify-content:center;
+    background:rgba(0,0,0,0.35);
+    backdrop-filter:blur(3px);
+    z-index:9999;
+}
+
+/* BEAUTIFUL GUIDE CARD */
+.guide-box{
+    width:88%;
+    max-width:370px;
+    background:#ffffff;
+    border-radius:24px;
+    padding:18px;
+
+    /* SOFT SHADOW */
+    box-shadow:
+      0 15px 35px rgba(0,0,0,0.22),
+      0 0 0 2px rgba(130,95,255,0.25),
+      0 0 20px rgba(120,80,255,0.35);
+
+    animation:guidePop .35s ease;
+}
+
+/* POP EFFECT */
+@keyframes guidePop{
+    from{
+      transform:scale(0.85) translateY(20px);
+      opacity:0;
+    }
+    to{
+      transform:scale(1);
+      opacity:1;
+    }
+}
+
+/* HEADER */
+.guide-header{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:12px;
+}
+
+.guide-title{
+    font-size:20px;
+    font-weight:700;
+    color:#3b2bbf;
+}
+
+/* CLOSE BUTTON */
+#closeGuide{
+    border:none;
+    width:30px;
+    height:30px;
+    border-radius:50%;
+    background:#ffffff;
+    color:#6a52ff;
+    font-size:16px;
+    cursor:pointer;
+    transition:.2s;
+}
+
+#closeGuide:hover{
+    transform:scale(1.1);
+}
+
+/* CONTENT */
+.guide-content{
+    font-size:14px;
+    line-height:1.6;
+    color:#333;
+}
+
+.guide-section-title{
+    font-weight:700;
+    color:#5a44ff;
+    margin-top:10px;
+    margin-bottom:6px;
+}
+
+
     /* ================= GLOBAL ================= */
 *{box-sizing:border-box;}
 
@@ -101,7 +315,7 @@ body{
   font-family:'Segoe UI',sans-serif;
   display:flex;
   justify-content:center;
-  overflow:hidden;
+  overflow:auto;
 
   background:
     radial-gradient(circle at var(--x,50%) var(--y,0%),
@@ -133,11 +347,9 @@ body{
 
 /* ================= APP FRAME ================= */
 .app-frame{
-  display:flex;
-  flex-direction:column;
   width:100%;
   max-width:420px;
-  height:100dvh;
+  height:100vh;
   padding:10px;
   position:relative;
   overflow:hidden;
@@ -261,8 +473,7 @@ input[type=range]{
   background:white;
   border-radius:30px;
   padding:10px;
-  flex:1;
-  min-height:0;
+  height:calc(100vh - 285px);
 
   display:flex;
   flex-direction:column;
@@ -321,8 +532,8 @@ input[type=range]{
 
 .slider-track{
   position:relative;
-  height:50px;
-  border-radius:25px;
+  height:70px;
+  border-radius:45px;
   background:linear-gradient(135deg,#766eff,#5c40db);
 
   display:flex;
@@ -381,8 +592,8 @@ input[type=range]{
   left:0;
   top:50%;
   transform:translateY(-50%);
-  width:48px;
-  height:48px;
+  width:60px;
+  height:60px;
   border-radius:50%;
   background:white;
 
@@ -520,59 +731,115 @@ let finalCircle = null;
 let stops = [];
 let addingStop = false;
 let currentRadius = 500;
+let routeCoords = [];
 
+
+let completedRouteLine = null;
+let remainingRouteLine = null;
+
+let followUser = true;
+let directionArrow = null;
+
+
+// ================= LIVE LOCATION =================
 
 // ================= LIVE LOCATION =================
 navigator.geolocation.watchPosition(
 
-  function(pos){
+function(pos){
 
-    userLatLng = L.latLng(
-      pos.coords.latitude,
-      pos.coords.longitude
-    );
+  userLatLng = L.latLng(
+    pos.coords.latitude,
+    pos.coords.longitude
+  );
 
-    if(!userMarker){
+  const heading = pos.coords.heading;
 
-      userMarker = L.circleMarker(userLatLng,{
-        radius:8,
-        color:"#6f6ce8",
-        fillOpacity:1
+  if(!userMarker){
+
+    userMarker = L.marker(userLatLng,{
+      icon: L.divIcon({
+        className:"",
+        html:'<div class="pulse-marker"></div>',
+        iconSize:[18,18]
+      })
+    }).addTo(map);
+
+    accuracyCircle = L.circle(userLatLng,{
+      radius:pos.coords.accuracy,
+      fillOpacity:.15,
+      color:"#6f6ce8"
+    }).addTo(map);
+
+    map.setView(userLatLng,15);
+
+  }else{
+
+    userMarker.setLatLng(userLatLng);
+    accuracyCircle.setLatLng(userLatLng);
+    accuracyCircle.setRadius(pos.coords.accuracy);
+  }
+
+  // ===== DIRECTION ARROW =====
+  if(heading !== null){
+
+    if(!directionArrow){
+
+      directionArrow = L.marker(userLatLng,{
+        icon:L.divIcon({
+          className:"",
+          html:`<div style="
+            width:0;height:0;
+            border-left:8px solid transparent;
+            border-right:8px solid transparent;
+            border-bottom:16px solid #00cc66;
+            transform:rotate(${heading}deg);
+          "></div>`
+        })
       }).addTo(map);
 
-      accuracyCircle = L.circle(userLatLng,{
-        radius:pos.coords.accuracy,
-        fillOpacity:.15,
-        color:"#6f6ce8"
-      }).addTo(map);
+    }else{
 
-      map.setView(userLatLng,15);
+      directionArrow.setLatLng(userLatLng);
 
-    } else {
-
-      userMarker.setLatLng(userLatLng);
-      accuracyCircle.setLatLng(userLatLng);
-      accuracyCircle.setRadius(pos.coords.accuracy);
-
+      directionArrow.setIcon(
+        L.divIcon({
+          className:"",
+          html:`<div style="
+            width:0;height:0;
+            border-left:8px solid transparent;
+            border-right:8px solid transparent;
+            border-bottom:16px solid #00cc66;
+            transform:rotate(${heading}deg);
+          "></div>`
+        })
+      );
     }
+  }
 
-    checkGeofence();
-  },
+  if(followUser){
+    map.panTo(userLatLng,{
+      animate:true,
+      duration:0.8
+    });
+  }
 
-  function(error){
-    console.log("GPS Error:", error);
-    alert("Please allow location access");
-  },
+  checkGeofence();
+  updateRemainingDistance();
+  updateRouteProgress(); // now valid
 
-  {
-  enableHighAccuracy:true,
-  maximumAge:0,
-  timeout:5000
+},
+
+function(error){
+  console.log("GPS Error:", error);
+  alert("Please allow location access");
+},
+
+{
+  enableHighAccuracy:true
 }
 
-
 );
-
 
 
 // ================= RADIUS =================
@@ -598,7 +865,6 @@ fetch(`https://nominatim.openstreetmap.org/search?format=jsonv2&q=${encodeURICom
     );
 
     setFinalDestination(latlng);
-    drawRoute();
 
   })
   .catch(()=>alert("Search failed"));
@@ -803,20 +1069,20 @@ document.getElementById("stopList")
 // ================= DRAW ROUTE =================
 function drawRoute(){
 
+  
   if(!userLatLng || !finalDestination) return;
 
   // cancel previous request
   if(routeAbortController){
     routeAbortController.abort();
   }
+  // ⭐ CLEAR ROUTE IMMEDIATELY
+  clearRoute();
 
   routeAbortController = new AbortController();
 
-  // remove previous route
-  if(routeLine){
-    map.removeLayer(routeLine);
-    routeLine = null;
-  }
+  
+
 
   let coords=`${userLatLng.lng},${userLatLng.lat}`;
 
@@ -840,10 +1106,110 @@ function drawRoute(){
   }).addTo(map);
 
   map.fitBounds(routeLine.getBounds());
+  routeCoords = data.routes[0].geometry.coordinates.map(c =>
+  L.latLng(c[1], c[0])
+);
+
 
   updateDistance();   // ✅ CORRECT PLACE
-
+  
 })
+}
+
+function updateRouteProgress(){
+
+  if(!userLatLng || routeCoords.length===0) return;
+
+  let nearest = 0;
+  let min = Infinity;
+
+  routeCoords.forEach((pt,i)=>{
+    const d = userLatLng.distanceTo(pt);
+    if(d < min){
+      min = d;
+      nearest = i;
+    }
+  });
+
+  const completed = routeCoords.slice(0,nearest+1);
+  const remaining = routeCoords.slice(nearest);
+
+  if(completedRouteLine)
+    map.removeLayer(completedRouteLine);
+
+  if(remainingRouteLine)
+    map.removeLayer(remainingRouteLine);
+
+  completedRouteLine = L.polyline(completed,{
+    color:"#999",
+    weight:6
+  }).addTo(map);
+
+  remainingRouteLine = L.polyline(remaining,{
+    color:"#6f6ce8",
+    weight:6
+  }).addTo(map);
+
+  // distance remaining
+  let dist=0;
+  for(let i=1;i<remaining.length;i++){
+    dist += remaining[i]
+      .distanceTo(remaining[i-1]);
+  }
+
+  document.getElementById("distanceDisplay")
+    .textContent =
+    "Distance: "+(dist/1000).toFixed(2)+" km";
+}
+
+
+
+function clearRoute(){
+
+  if(routeLine){
+    map.removeLayer(routeLine);
+    routeLine = null;
+  }
+
+  if(completedRouteLine){
+    map.removeLayer(completedRouteLine);
+    completedRouteLine = null;
+  }
+
+  if(remainingRouteLine){
+    map.removeLayer(remainingRouteLine);
+    remainingRouteLine = null;
+  }
+
+  routeCoords = [];
+}
+
+function updateRemainingDistance(){
+
+  if(!userLatLng || routeCoords.length === 0) return;
+
+  let nearestIndex = 0;
+  let minDist = Infinity;
+
+  // find closest route point to user
+  routeCoords.forEach((pt,i)=>{
+    const d = userLatLng.distanceTo(pt);
+    if(d < minDist){
+      minDist = d;
+      nearestIndex = i;
+    }
+  });
+
+  // calculate remaining distance
+  let remaining = 0;
+
+  for(let i=nearestIndex+1; i<routeCoords.length; i++){
+    remaining += routeCoords[i]
+      .distanceTo(routeCoords[i-1]);
+  }
+
+  document.getElementById("distanceDisplay").textContent =
+    "Distance: " + (remaining/1000).toFixed(2) + " km";
 }
 
 function resetAlarmSlider(){
@@ -878,7 +1244,6 @@ function checkGeofence(){
 
   if(!userLatLng || !alarmArmed) return;
 
-  /* ===== CHECK STOPS ===== */
   stops.forEach(stop=>{
 
     if(!stop.reached){
@@ -888,30 +1253,36 @@ function checkGeofence(){
       if(distance <= stop.radius){
 
         stop.reached = true;
+
         stop.circle.setStyle({color:"green"});
 
         triggerAlarmSound(stop.name);
+
       }
+
     }
 
   });
+  if(finalDestination && finalCircle){
 
-  /* ===== CHECK FINAL DESTINATION (IMPORTANT) ===== */
-  if(finalDestination){
+  const d =
+    userLatLng.distanceTo(finalDestination);
 
-    const finalDistance =
-      userLatLng.distanceTo(finalDestination);
-
-    if(finalDistance <= currentRadius){
-
-      triggerAlarmSound("Destination");
-
-      // prevent repeated ringing
-      finalDestination = null;
-    }
+  if(d <= currentRadius){
+    finalCircle.setStyle({
+      color:"green",
+      fillColor:"green"
+    });
+  } else {
+    finalCircle.setStyle({
+      color:"red",
+      fillColor:"red"
+    });
   }
 }
 
+
+}
 function triggerAlarmSound(place){
 
   const audio = document.getElementById("alarmSound");
@@ -1063,22 +1434,12 @@ window.addEventListener("DOMContentLoaded", () => {
 
   alarmArmed = true;
 
-  // 🔥 RESET ALL STOPS WHEN ARMING ALARM
-  stops.forEach(s => s.reached = false);
-
-  // 🔥 UNLOCK AUDIO FOR MOBILE
-  const audio = document.getElementById("alarmSound");
-  audio.play().then(()=>{
-    audio.pause();
-    audio.currentTime = 0;
-  }).catch(()=>{});
-
   showToast("Alarm Activated");
   console.log("Alarm ON");
 
-  checkGeofence();
-}
+  checkGeofence(); // ← IMPORTANT
 
+}
 
 });
 
@@ -1095,11 +1456,101 @@ function deactivateAlarm(){
 
 }
 
+
 </script>
 <audio id="alarmSound" src="ALARM.mp3" preload="auto"></audio>
 
 
 <div id="toast" class="toast"></div>
+<div id="guideModal" class="guide-modal">
+
+  <div class="guide-box">
+
+    <div class="guide-header">
+    <div class="guide-title">Wake Me Up Guide ✨</div>
+    <button id="closeGuide">✕</button>
+</div>
+
+<div class="guide-content">
+
+    <p><b>Welcome to Wake Me Up 🚀</b><br>
+    Smart location-based alarm for travelers.<br>
+  Developed by <b>Mr.Arbaj Shaikh</b><br>
+Senior Data Scientist & Gen AI Architect</p>
+
+
+    <div class="guide-section-title">🌍 Main USP</div>
+    <p>
+      Your alarm rings automatically when you reach your destination radius —
+      no need to keep checking maps or time while travelling.
+    </p>
+
+    <div class="guide-section-title">⚡ How To Use</div>
+    <p>• Search your destination city</p>
+    <p>• Adjust radius (trigger alarm once you're within radius)</p>
+    <p>• Add multiple stops if needed (trigger alarm at each stop)</p>
+    <p>• Slide to activate tracking</p>
+
+    <div class="guide-section-title">💡 Pro Tips</div>
+    <p>• Use radius sliders or manual adjustment for accurate wake-up</p>
+    <p>• Keep GPS & Application ON for best tracking</p>
+    <p>• Works great for long-distance travel</p>
+
+</div>
+
+
+  </div>
+
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function(){
+
+  const infoBtn = document.getElementById("infoBtn");
+  const guide = document.getElementById("guideModal");
+  const closeGuide = document.getElementById("closeGuide");
+  const refreshBtn = document.getElementById("refreshBtn");
+  
+  refreshBtn.onclick = function(){
+
+  const overlay =
+    document.getElementById("refreshOverlay");
+
+  // start animation
+  overlay.classList.add("active");
+
+  // reload after animation
+  setTimeout(()=>{
+    location.reload();
+  },900);
+
+};
+
+
+  if(!infoBtn) return;
+
+
+
+  // OPEN
+  infoBtn.onclick = function(){
+      guide.style.display = "flex";
+  };
+
+  // CLOSE button
+  closeGuide.onclick = function(){
+      guide.style.display = "none";
+  };
+
+  // click outside closes
+  guide.onclick = function(e){
+      if(e.target === guide){
+          guide.style.display = "none";
+      }
+  };
+
+});
+</script>
+<div id="refreshOverlay"></div>
 
 </body>
 </html>
