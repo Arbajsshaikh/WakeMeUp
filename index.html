@@ -26,7 +26,6 @@
       <div class="main-title">Wake Me Up</div>
 
       <div id="infoBtn" class="info-btn">i</div>
-        <div id="refreshBtn" class="info-btn">R</div>
 
   </div>
 
@@ -75,6 +74,14 @@
       <div class="map-card">
         <div class="map-inner">
           <div id="map"></div>
+
+
+          <!-- MAP REFRESH BUTTON -->
+      <div class="top-right">
+       <div id="refreshBtn" class="info-btn">R</div>
+
+      </div>
+
         </div>
       </div>
 
@@ -107,6 +114,11 @@
   background:#ffffff;
   color:#6a52ff;
   size:15px;
+    position:absolute;
+  top:15px;      /* distance from top */
+  right:15px;    /* distance from right */
+
+  z-index:1000;  /* above map */
 }
 
 
@@ -172,27 +184,7 @@
     gap:8px;
 }
 
-/* INFO ICON */
-.info-btn{
-    width:18px;
-    height:18px;
-    margin-left:10px;
-    border-radius:50%;
-    background:white;
-    color:#6a52ff;
-    font-weight:bold;
-    font-size:19px;
 
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    cursor:pointer;
-
-    box-shadow:0 3px 8px rgba(0,0,0,.2);
-
-    /* INFINITE PREMIUM POP */
-    animation:popPulse 1.2s ease-in-out infinite;
-}
 
 /* ===== PREMIUM POP IN-OUT ===== */
 @keyframes popPulse{
@@ -483,6 +475,8 @@ input[type=range]{
     inset 0 1px 3px rgba(255,255,255,.9);
 
   animation:mapFloat 5s ease-in-out infinite;
+  position:relative;   /* IMPORTANT */
+
 }
 
 @keyframes mapFloat{
@@ -507,8 +501,21 @@ input[type=range]{
   box-shadow:
     0 15px 35px rgba(0,0,0,.25),
     0 0 20px rgba(111,108,232,.35);
+      position:relative;   /* IMPORTANT */
+
 }
 
+.map-buttons{
+  position:absolute;
+  top:12px;
+  right:12px;
+
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+
+  z-index:1000;
+}
 #map{
   width:100%;
   height:100%;
@@ -604,7 +611,7 @@ input[type=range]{
   cursor:pointer;
 
   /* 🔥 smooth but stable */
-  transition:left 0.05s linear;
+  transition:none;
 }
 
 
@@ -703,6 +710,46 @@ input[type=range]::-moz-range-thumb{
     0 0 10px rgba(255,255,255,.9);
 }
 
+.info-btn{
+  width:28px;          /* was 48px */
+  height:28px;
+  border-radius:50%;
+  border:2px solid rgba(255,255,255,0.35);
+
+  background:linear-gradient(
+      145deg,
+      #8b67ff 0%,
+      #6f42f5 50%,
+      #5a2de0 100%
+  );
+
+  color:white;
+  font-size:16px;      /* reduced icon size */
+  font-weight:700;
+
+  display:flex;
+  align-items:center;
+  justify-content:center;
+
+  cursor:pointer;
+
+  box-shadow:
+    inset 0 2px 4px rgba(255,255,255,0.35),
+    0 4px 10px rgba(65,30,170,0.45);
+}
+
+/* spacing */
+.top-right{
+  display:flex;
+  gap:8px;             /* slightly tighter */
+}
+.map-inner{
+  position:relative;   /* important */
+}
+
+
+
+
 </style>
 
 
@@ -717,6 +764,11 @@ let alarmArmed = false;
 
 // ================= INIT MAP =================
 let map = L.map('map').setView([20,77],5);
+map.on("dragstart", function(){
+  followUser = false;
+});
+
+
 
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
   attribution:'© OpenStreetMap'
@@ -1417,6 +1469,8 @@ window.addEventListener("DOMContentLoaded", () => {
   function startDrag(e){
     dragging=true;
     startX = getX(e);
+    thumb.style.transition = "none";
+
   }
 
   function drag(e){
@@ -1441,6 +1495,7 @@ window.addEventListener("DOMContentLoaded", () => {
 
 
   function stopDrag(){
+thumb.style.transition = "left 0.18s ease";
 
   if(!dragging) return;
   dragging = false;
