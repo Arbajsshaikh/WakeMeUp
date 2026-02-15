@@ -602,8 +602,11 @@ input[type=range]{
     0 0 12px rgba(255,255,255,.85);
 
   cursor:pointer;
-  transition:left .25s ease,transform .15s;
+
+  /* 🔥 smooth but stable */
+  transition:left 0.05s linear;
 }
+
 
 /* HAPTIC BOUNCE */
 .slider-thumb:active{
@@ -1263,23 +1266,58 @@ function checkGeofence(){
     }
 
   });
-  if(finalDestination && finalCircle){
+ if(finalDestination && finalCircle){
 
-  const d =
-    userLatLng.distanceTo(finalDestination);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  const d = userLatLng.distanceTo(finalDestination);
 
   if(d <= currentRadius){
+
     finalCircle.setStyle({
       color:"green",
       fillColor:"green"
     });
+
+    // 🔥 TRIGGER ALARM (ONLY ONCE)
+    if(!finalDestination.reached){
+      finalDestination.reached = true;
+      triggerAlarmSound("Destination");
+    }
+
   } else {
+
     finalCircle.setStyle({
       color:"red",
       fillColor:"red"
     });
   }
 }
+
 
 
 }
@@ -1382,26 +1420,30 @@ window.addEventListener("DOMContentLoaded", () => {
   }
 
   function drag(e){
+
   if(!dragging) return;
 
   const sliderRect = slider.getBoundingClientRect();
-  const thumbRect = thumb.getBoundingClientRect();
-
-  currentX = getX(e) - sliderRect.left - (thumbRect.width / 2);
-
   const max = slider.offsetWidth - thumb.offsetWidth;
+
+  currentX =
+    getX(e) - sliderRect.left - (thumb.offsetWidth / 2);
 
   if(currentX < 0) currentX = 0;
   if(currentX > max) currentX = max;
 
-  thumb.style.left = currentX + "px";
+  // smooth movement
+  requestAnimationFrame(()=>{
+    thumb.style.left = currentX + "px";
+  });
 }
+
 
 
   function stopDrag(){
 
   if(!dragging) return;
-  dragging=false;
+  dragging = false;
 
   const max = slider.offsetWidth - thumb.offsetWidth;
 
@@ -1413,14 +1455,13 @@ window.addEventListener("DOMContentLoaded", () => {
       activateAlarm();
     }
 
-  } else {
+  }else{
 
     thumb.style.left = "0px";
 
     if(alarmArmed){
       deactivateAlarm();
     }
-
   }
 }
 
